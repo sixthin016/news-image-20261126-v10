@@ -1,18 +1,30 @@
 #!/usr/bin/env python3
-"""Entry point for the news-image-20261126 v10 entry.
+"""Deliver the finished broadsheet PNG to the grader output folder.
 
-The page is pre-rendered by tools/generate.py (stdlib + Pillow only,
-deterministic, no network, no clock). This script just places the
-finished 1024x1024 PNG where the grader expects it. Run
-`python3 tools/generate.py` first to rebuild assets/entry.png.
+The picture is baked ahead of time by tools/generate.py; this module
+only carries the baked file across. Nothing here reaches the network,
+reads the clock, or depends on the machine it runs on.
 """
-import os
-import shutil
+from os import environ as _env, makedirs as _makedirs
+from os import path as _path
+from shutil import copyfile as _copyfile
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-SOURCE = os.path.join(HERE, "assets", "entry.png")
-TARGET_DIR = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
 
-os.makedirs(TARGET_DIR, exist_ok=True)
-shutil.copyfile(SOURCE, os.path.join(TARGET_DIR, "entry.png"))
-print("copied entry.png to", TARGET_DIR)
+def _baked_png():
+    folder = _path.dirname(_path.abspath(__file__))
+    return _path.join(folder, "assets", "entry.png")
+
+
+def _out_folder():
+    return _env.get("MAKEFUN_OUTPUT_DIR", "/output")
+
+
+def ship():
+    """Copy the baked PNG into the output folder and say where it went."""
+    dest = _out_folder()
+    _makedirs(dest, exist_ok=True)
+    _copyfile(_baked_png(), _path.join(dest, "entry.png"))
+    print("entry.png delivered to", dest)
+
+
+ship()
